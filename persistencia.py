@@ -10,6 +10,7 @@ Assinaturas estaveis (o resto do app importa destas):
     - carregar_personagens, salvar_personagem,
       atualizar_personagem, remover_personagem
     - carregar_bestiario, salvar_bestiario
+    - carregar_habilidades, salvar_habilidade
     - copiar_imagem(origem) -> id da imagem
     - caminho_imagem(id) -> path absoluto no disco (faz cache se remoto)
     - carregar_app_config / salvar_app_config
@@ -67,6 +68,7 @@ else:
 ARQUIVO_CONFIG = os.path.join(PASTA_BASE, "app.json")
 ARQUIVO_PERSONAGENS = os.path.join(PASTA_BASE, "personagens.json")
 ARQUIVO_BESTIARIO = os.path.join(PASTA_BASE, "bestiario.json")
+ARQUIVO_HABILIDADES = os.path.join(PASTA_BASE, "habilidades.json")
 PASTA_IMAGENS = os.path.join(PASTA_BASE, "imagens")
 PASTA_IMAGENS_CACHE = os.path.join(PASTA_BASE, "imagens_cache")
 _ARQUIVO_CONFIG_BUNDLE = os.path.join(_PASTA_BUNDLE, "app.json")
@@ -280,6 +282,36 @@ def salvar_bestiario(monstros):
         return
     with open(ARQUIVO_BESTIARIO, "w", encoding="utf-8") as f:
         json.dump({"monstros": monstros}, f, ensure_ascii=False, indent=2)
+
+
+# =============================================================================
+# HABILIDADES
+# =============================================================================
+
+
+def carregar_habilidades():
+    """Catalogo compartilhado de habilidades. Todo usuario autenticado le."""
+    if _modo() == "remoto":
+        return _http_get("/habilidades") or []
+    if not os.path.exists(ARQUIVO_HABILIDADES):
+        return []
+    try:
+        with open(ARQUIVO_HABILIDADES, "r", encoding="utf-8") as f:
+            return json.load(f).get("habilidades", [])
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def salvar_habilidade(habilidade):
+    """Adiciona uma habilidade nova ao catalogo. Devolve a habilidade (com
+    id/criado_por preenchidos pelo servidor em modo remoto)."""
+    if _modo() == "remoto":
+        return _http_post("/habilidades", json_body=habilidade)
+    lista = carregar_habilidades()
+    lista.append(habilidade)
+    with open(ARQUIVO_HABILIDADES, "w", encoding="utf-8") as f:
+        json.dump({"habilidades": lista}, f, ensure_ascii=False, indent=2)
+    return habilidade
 
 
 # =============================================================================

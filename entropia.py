@@ -148,11 +148,13 @@ from persistencia import (
     atualizar_personagem,
     caminho_imagem,
     carregar_bestiario,
+    carregar_habilidades,
     carregar_personagens,
     copiar_imagem,
     login as autenticar,
     remover_personagem,
     salvar_bestiario,
+    salvar_habilidade,
     salvar_personagem,
 )
 
@@ -1151,10 +1153,103 @@ class TelaPrincipal(tk.Tk):
 # =============================================================================
 
 
+class DialogoCriarHabilidade(tk.Toplevel):
+    LARGURA = 440
+    ALTURA = 340
+
+    def __init__(self, master):
+        super().__init__(master)
+        self.resultado = None
+
+        self.title("Criar Habilidade")
+        self.configure(bg=COR_FUNDO)
+        self.geometry(f"{self.LARGURA}x{self.ALTURA}")
+        self.resizable(False, False)
+        self.transient(master)
+        self.grab_set()
+
+        self.update_idletasks()
+        x = master.winfo_rootx() + (master.winfo_width() // 2) - (self.LARGURA // 2)
+        y = master.winfo_rooty() + (master.winfo_height() // 2) - (self.ALTURA // 2)
+        self.geometry(f"{self.LARGURA}x{self.ALTURA}+{x}+{y}")
+
+        self._montar()
+
+    def _montar(self):
+        container = tk.Frame(self, bg=COR_FUNDO)
+        container.pack(expand=True, fill="both", padx=20, pady=14)
+
+        tk.Label(
+            container, text="Nova Habilidade", font=FONTE_SECAO,
+            bg=COR_FUNDO, fg=COR_TEXTO, anchor="w",
+        ).pack(fill="x", pady=(0, 10))
+
+        tk.Label(
+            container, text="nome", font=FONTE_LABEL,
+            bg=COR_FUNDO, fg=COR_TEXTO_SUAVE, anchor="w",
+        ).pack(fill="x")
+        self.entry_nome = tk.Entry(
+            container, font=FONTE_CAMPO,
+            bg=COR_FUNDO, fg=COR_TEXTO,
+            insertbackground=COR_TEXTO, relief="flat", bd=0,
+        )
+        self.entry_nome.pack(fill="x", pady=(2, 0))
+        tk.Frame(container, bg=COR_BORDA, height=1).pack(fill="x", pady=(0, 10))
+
+        tk.Label(
+            container, text="descricao", font=FONTE_LABEL,
+            bg=COR_FUNDO, fg=COR_TEXTO_SUAVE, anchor="w",
+        ).pack(fill="x", pady=(0, 2))
+        self.text_desc = tk.Text(
+            container, height=6,
+            bg=COR_FUNDO_CAMPO, fg=COR_TEXTO,
+            insertbackground=COR_TEXTO, relief="flat", bd=0,
+            padx=8, pady=6, font=FONTE_LABEL, wrap="word",
+            highlightthickness=1, highlightbackground=COR_BORDA,
+        )
+        self.text_desc.pack(fill="both", expand=True, pady=(0, 12))
+
+        rodape = tk.Frame(container, bg=COR_FUNDO)
+        rodape.pack(fill="x")
+
+        cancelar = tk.Label(
+            rodape, text="Cancelar", font=FONTE_BOTAO,
+            bg=COR_FUNDO, fg=COR_TEXTO_SUAVE,
+            cursor="hand2", padx=14, pady=6,
+        )
+        cancelar.pack(side="right", padx=(0, 8))
+        cancelar.bind("<Button-1>", lambda e: self.destroy())
+        cancelar.bind("<Enter>", lambda e: cancelar.configure(fg=COR_TEXTO))
+        cancelar.bind("<Leave>", lambda e: cancelar.configure(fg=COR_TEXTO_SUAVE))
+
+        criar = tk.Label(
+            rodape, text="Criar", font=FONTE_BOTAO,
+            bg=COR_DESTAQUE, fg=COR_TEXTO,
+            cursor="hand2", padx=20, pady=6,
+        )
+        criar.pack(side="right")
+        criar.bind("<Button-1>", lambda e: self._confirmar())
+        criar.bind("<Enter>", lambda e: criar.configure(bg=COR_DESTAQUE_HOVER))
+        criar.bind("<Leave>", lambda e: criar.configure(bg=COR_DESTAQUE))
+
+        self.entry_nome.focus_set()
+
+    def _confirmar(self):
+        nome = self.entry_nome.get().strip()
+        if not nome:
+            messagebox.showwarning(
+                "Atencao", "O nome da habilidade e obrigatorio.", parent=self,
+            )
+            return
+        descricao = self.text_desc.get("1.0", "end").strip()
+        self.resultado = (nome, descricao)
+        self.destroy()
+
+
 class TelaCriacaoPersonagem(tk.Toplevel):
     TAMANHO_IMAGEM = 150
     LARGURA = 828
-    ALTURA = 648
+    ALTURA = 680
 
     def __init__(self, master, criado_por, personagem_existente=None):
         super().__init__(master)
@@ -1173,6 +1268,8 @@ class TelaCriacaoPersonagem(tk.Toplevel):
 
         self.armamentos = []
         self.itens = []
+        self.habilidades = []
+        self.catalogo_habilidades = []
         self.aba_atual = "personagem"
         self.tab_labels = {}
         self.frames_aba = {}
@@ -1191,6 +1288,7 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         self.grab_set()
 
         self._centralizar()
+        self._carregar_catalogo_habilidades()
         self._montar_interface()
 
         if self.modo_edicao:
@@ -1221,9 +1319,11 @@ class TelaCriacaoPersonagem(tk.Toplevel):
 
         self.frames_aba["personagem"] = tk.Frame(corpo_abas, bg=COR_FUNDO)
         self.frames_aba["inventario"] = tk.Frame(corpo_abas, bg=COR_FUNDO)
+        self.frames_aba["habilidades"] = tk.Frame(corpo_abas, bg=COR_FUNDO)
 
         self._montar_aba_personagem(self.frames_aba["personagem"])
         self._montar_aba_inventario(self.frames_aba["inventario"])
+        self._montar_aba_habilidades(self.frames_aba["habilidades"])
 
         self._montar_rodape(container)
         self._trocar_aba("personagem")
@@ -1232,7 +1332,11 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         barra = tk.Frame(parent, bg=COR_FUNDO)
         barra.pack(fill="x")
 
-        for chave, rotulo in (("personagem", "Personagem"), ("inventario", "Inventario")):
+        for chave, rotulo in (
+            ("personagem", "Personagem"),
+            ("inventario", "Inventario"),
+            ("habilidades", "Habilidades"),
+        ):
             label = tk.Label(
                 barra, text=rotulo, font=FONTE_BOTAO,
                 bg=COR_FUNDO_CAMPO, fg=COR_TEXTO,
@@ -1259,7 +1363,35 @@ class TelaCriacaoPersonagem(tk.Toplevel):
                 frame.pack_forget()
 
     def _montar_aba_personagem(self, parent):
-        topo = tk.Frame(parent, bg=COR_FUNDO)
+        self.canvas_personagem = tk.Canvas(
+            parent, bg=COR_FUNDO, highlightthickness=0,
+        )
+        scrollbar = tk.Scrollbar(parent, orient="vertical",
+                                 command=self.canvas_personagem.yview)
+        self.canvas_personagem.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="y")
+        self.canvas_personagem.pack(side="left", fill="both", expand=True)
+
+        self.frame_personagem_conteudo = tk.Frame(self.canvas_personagem, bg=COR_FUNDO)
+        self.janela_personagem = self.canvas_personagem.create_window(
+            (0, 0), window=self.frame_personagem_conteudo, anchor="nw",
+        )
+
+        def _ajustar_largura(event):
+            self.canvas_personagem.itemconfigure(self.janela_personagem, width=event.width)
+
+        self.canvas_personagem.bind("<Configure>", _ajustar_largura)
+        self.frame_personagem_conteudo.bind(
+            "<Configure>",
+            lambda e: self.canvas_personagem.configure(scrollregion=self.canvas_personagem.bbox("all")),
+        )
+        self.canvas_personagem.bind("<Enter>", lambda e: self._ligar_scroll_personagem())
+        self.canvas_personagem.bind("<Leave>", lambda e: self._desligar_scroll_personagem())
+
+        conteudo = self.frame_personagem_conteudo
+
+        topo = tk.Frame(conteudo, bg=COR_FUNDO)
         topo.pack(fill="x")
 
         coluna_esq = tk.Frame(topo, bg=COR_FUNDO)
@@ -1271,24 +1403,33 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         self._montar_imagem(coluna_esq)
         self._montar_campos(coluna_dir)
 
-        self._montar_barras(parent)
-        self._montar_atributos(parent)
-        self._montar_descricao(parent)
+        self._montar_barras(conteudo)
+        self._montar_atributos(conteudo)
+        self._montar_descricao(conteudo)
+
+    def _ligar_scroll_personagem(self):
+        self.canvas_personagem.bind_all("<MouseWheel>", self._scroll_personagem)
+
+    def _desligar_scroll_personagem(self):
+        self.canvas_personagem.unbind_all("<MouseWheel>")
+
+    def _scroll_personagem(self, event):
+        self.canvas_personagem.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def _montar_descricao(self, parent):
         secao = tk.Frame(parent, bg=COR_FUNDO)
-        secao.pack(fill="x", pady=(10, 0))
+        secao.pack(fill="x", pady=(12, 0))
 
         tk.Label(
-            secao, text="DESCRICAO / HISTORICO", font=FONTE_LABEL,
-            bg=COR_FUNDO, fg=COR_TEXTO_SUAVE, anchor="w",
-        ).pack(fill="x", pady=(0, 3))
+            secao, text="DESCRICAO / HISTORIA", font=("Segoe UI", 11, "bold"),
+            bg=COR_FUNDO, fg=COR_TEXTO, anchor="w",
+        ).pack(fill="x", pady=(0, 4))
 
         self.text_descricao = tk.Text(
-            secao, height=2,
+            secao, height=6,
             bg=COR_FUNDO_CAMPO, fg=COR_TEXTO,
             insertbackground=COR_TEXTO,
-            relief="flat", bd=0, padx=8, pady=4,
+            relief="flat", bd=0, padx=8, pady=6,
             font=FONTE_LABEL, wrap="word",
             highlightthickness=1, highlightbackground=COR_BORDA,
         )
@@ -2140,6 +2281,211 @@ class TelaCriacaoPersonagem(tk.Toplevel):
 
         return card
 
+    # ----- aba habilidades -----
+
+    def _carregar_catalogo_habilidades(self):
+        try:
+            self.catalogo_habilidades = list(carregar_habilidades() or [])
+        except Exception:
+            self.catalogo_habilidades = []
+
+    def _montar_aba_habilidades(self, parent):
+        moldura = tk.Frame(parent, bg=COR_FUNDO,
+                           highlightthickness=1, highlightbackground=COR_BORDA)
+        moldura.pack(fill="both", expand=True)
+
+        self.canvas_habilidades = tk.Canvas(
+            moldura, bg=COR_FUNDO, highlightthickness=0,
+        )
+        scrollbar = tk.Scrollbar(moldura, orient="vertical",
+                                 command=self.canvas_habilidades.yview)
+        self.canvas_habilidades.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="y")
+        self.canvas_habilidades.pack(side="left", fill="both", expand=True)
+
+        self.frame_habilidades = tk.Frame(self.canvas_habilidades, bg=COR_FUNDO)
+        janela = self.canvas_habilidades.create_window(
+            (0, 0), window=self.frame_habilidades, anchor="nw",
+        )
+
+        self.canvas_habilidades.bind(
+            "<Configure>",
+            lambda e: self.canvas_habilidades.itemconfigure(janela, width=e.width),
+        )
+        self.frame_habilidades.bind(
+            "<Configure>",
+            lambda e: self.canvas_habilidades.configure(
+                scrollregion=self.canvas_habilidades.bbox("all")
+            ),
+        )
+        self.canvas_habilidades.bind("<Enter>", lambda e: self._ligar_scroll_habilidades())
+        self.canvas_habilidades.bind("<Leave>", lambda e: self._desligar_scroll_habilidades())
+
+        self._renderizar_habilidades()
+
+    def _ligar_scroll_habilidades(self):
+        self.canvas_habilidades.bind_all("<MouseWheel>", self._scroll_habilidades)
+
+    def _desligar_scroll_habilidades(self):
+        self.canvas_habilidades.unbind_all("<MouseWheel>")
+
+    def _scroll_habilidades(self, event):
+        self.canvas_habilidades.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def _renderizar_habilidades(self):
+        for child in self.frame_habilidades.winfo_children():
+            child.destroy()
+
+        # ----- minhas habilidades -----
+        tk.Label(
+            self.frame_habilidades, text="MINHAS HABILIDADES",
+            font=("Segoe UI", 11, "bold"),
+            bg=COR_FUNDO, fg=COR_TEXTO, anchor="w",
+        ).pack(fill="x", padx=8, pady=(4, 4))
+
+        if not self.habilidades:
+            tk.Label(
+                self.frame_habilidades, text="nenhuma habilidade selecionada",
+                font=FONTE_LABEL, bg=COR_FUNDO, fg=COR_TEXTO_FRACO,
+            ).pack(anchor="w", padx=14, pady=(0, 4))
+        for hab in self.habilidades:
+            self._criar_card_habilidade_minha(hab).pack(
+                fill="x", padx=8, pady=4,
+            )
+
+        # ----- disponiveis + botao criar -----
+        self._cabecalho_secao(
+            self.frame_habilidades, "HABILIDADES DISPONIVEIS",
+            "+ Criar habilidade", self._criar_habilidade,
+            pady_topo=(16, 4),
+        )
+
+        if not self.catalogo_habilidades:
+            tk.Label(
+                self.frame_habilidades, text="nenhuma habilidade cadastrada",
+                font=FONTE_LABEL, bg=COR_FUNDO, fg=COR_TEXTO_FRACO,
+            ).pack(anchor="w", padx=14, pady=(0, 4))
+        for hab in self.catalogo_habilidades:
+            self._criar_card_habilidade_disponivel(hab).pack(
+                fill="x", padx=8, pady=4,
+            )
+
+    def _criar_card_habilidade_minha(self, hab):
+        card = tk.Frame(self.frame_habilidades, bg=COR_FUNDO_PAINEL,
+                        highlightthickness=1, highlightbackground=COR_BORDA)
+
+        linha1 = tk.Frame(card, bg=COR_FUNDO_PAINEL)
+        linha1.pack(fill="x", padx=10, pady=(8, 2))
+
+        tk.Label(
+            linha1, text=hab.get("nome", ""),
+            font=("Segoe UI", 10, "bold"),
+            bg=COR_FUNDO_PAINEL, fg=COR_TEXTO, anchor="w",
+        ).pack(side="left", fill="x", expand=True)
+
+        remover = tk.Label(
+            linha1, text="✕", font=("Segoe UI", 11),
+            bg=COR_FUNDO_PAINEL, fg=COR_TEXTO_SUAVE, cursor="hand2",
+        )
+        remover.pack(side="right")
+        remover.bind("<Button-1>", lambda e, hid=hab.get("id"): self._remover_habilidade(hid))
+        remover.bind("<Enter>", lambda e: remover.configure(fg=COR_VIDA))
+        remover.bind("<Leave>", lambda e: remover.configure(fg=COR_TEXTO_SUAVE))
+
+        descricao = hab.get("descricao", "") or ""
+        if descricao:
+            tk.Label(
+                card, text=descricao, font=FONTE_LABEL,
+                bg=COR_FUNDO_PAINEL, fg=COR_TEXTO_SUAVE,
+                anchor="w", justify="left", wraplength=680,
+            ).pack(fill="x", padx=10, pady=(0, 8))
+        else:
+            tk.Frame(card, bg=COR_FUNDO_PAINEL, height=4).pack()
+
+        return card
+
+    def _criar_card_habilidade_disponivel(self, hab):
+        card = tk.Frame(self.frame_habilidades, bg=COR_FUNDO_PAINEL,
+                        highlightthickness=1, highlightbackground=COR_BORDA)
+
+        linha1 = tk.Frame(card, bg=COR_FUNDO_PAINEL)
+        linha1.pack(fill="x", padx=10, pady=(8, 2))
+
+        tk.Label(
+            linha1, text=hab.get("nome", ""),
+            font=("Segoe UI", 10, "bold"),
+            bg=COR_FUNDO_PAINEL, fg=COR_TEXTO, anchor="w",
+        ).pack(side="left", fill="x", expand=True)
+
+        ja_selecionada = any(
+            h.get("id") == hab.get("id") for h in self.habilidades
+        )
+        if ja_selecionada:
+            tk.Label(
+                linha1, text="selecionada", font=FONTE_LABEL,
+                bg=COR_FUNDO_PAINEL, fg=COR_TEXTO_FRACO,
+            ).pack(side="right")
+        else:
+            botao = tk.Label(
+                linha1, text="+ Adicionar", font=FONTE_BOTAO,
+                bg=COR_DESTAQUE, fg=COR_TEXTO,
+                padx=10, pady=2, cursor="hand2",
+            )
+            botao.pack(side="right")
+            botao.bind("<Button-1>", lambda e, h=hab: self._selecionar_habilidade(h))
+            botao.bind("<Enter>", lambda e: botao.configure(bg=COR_DESTAQUE_HOVER))
+            botao.bind("<Leave>", lambda e: botao.configure(bg=COR_DESTAQUE))
+
+        descricao = hab.get("descricao", "") or ""
+        if descricao:
+            tk.Label(
+                card, text=descricao, font=FONTE_LABEL,
+                bg=COR_FUNDO_PAINEL, fg=COR_TEXTO_SUAVE,
+                anchor="w", justify="left", wraplength=680,
+            ).pack(fill="x", padx=10, pady=(0, 8))
+        else:
+            tk.Frame(card, bg=COR_FUNDO_PAINEL, height=4).pack()
+
+        return card
+
+    def _selecionar_habilidade(self, hab):
+        if any(h.get("id") == hab.get("id") for h in self.habilidades):
+            return
+        self.habilidades.append({
+            "id": hab.get("id"),
+            "nome": hab.get("nome", ""),
+            "descricao": hab.get("descricao", ""),
+        })
+        self._renderizar_habilidades()
+
+    def _remover_habilidade(self, hid):
+        self.habilidades = [h for h in self.habilidades if h.get("id") != hid]
+        self._renderizar_habilidades()
+
+    def _criar_habilidade(self):
+        dialog = DialogoCriarHabilidade(self)
+        self.wait_window(dialog)
+        if dialog.resultado is None:
+            return
+        nome, descricao = dialog.resultado
+        payload = {
+            "id": uuid.uuid4().hex,
+            "nome": nome,
+            "descricao": descricao,
+        }
+        try:
+            nova = salvar_habilidade(payload) or payload
+        except Exception as erro:
+            messagebox.showerror(
+                "Erro",
+                f"Nao foi possivel criar a habilidade:\n{erro}",
+                parent=self,
+            )
+            return
+        self.catalogo_habilidades.append(nova)
+        self._selecionar_habilidade(nova)
+
     # ----- rodape -----
 
     def _montar_rodape(self, parent):
@@ -2190,6 +2536,7 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         descricao = self.text_descricao.get("1.0", "end").strip()
         armamentos = [dict(a) for a in self.armamentos]
         itens = [dict(i) for i in self.itens]
+        habilidades = [dict(h) for h in self.habilidades]
 
         if self.modo_edicao:
             personagem = dict(self.existente)
@@ -2208,6 +2555,7 @@ class TelaCriacaoPersonagem(tk.Toplevel):
                 "descricao": descricao,
                 "armamentos": armamentos,
                 "itens": itens,
+                "habilidades": habilidades,
                 "imagem": imagem_path,
             })
             try:
@@ -2239,6 +2587,7 @@ class TelaCriacaoPersonagem(tk.Toplevel):
             "descricao": descricao,
             "armamentos": armamentos,
             "itens": itens,
+            "habilidades": habilidades,
             "imagem": imagem_path,
         }
 
@@ -2312,6 +2661,15 @@ class TelaCriacaoPersonagem(tk.Toplevel):
                 "descricao": item.get("descricao", ""),
             })
         self._renderizar_inventario()
+
+        self.habilidades = []
+        for hab in (p.get("habilidades") or []):
+            self.habilidades.append({
+                "id": hab.get("id") or uuid.uuid4().hex,
+                "nome": hab.get("nome", ""),
+                "descricao": hab.get("descricao", ""),
+            })
+        self._renderizar_habilidades()
 
         imagem_path = p.get("imagem", "")
         self.imagem_path_salvo = imagem_path

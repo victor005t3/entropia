@@ -38,6 +38,7 @@ DADOS_DIR = os.environ.get("ENTROPIA_DADOS_DIR") or os.path.join(PASTA_SERVIDOR,
 ARQUIVO_USUARIOS = os.path.join(DADOS_DIR, "usuarios.json")
 ARQUIVO_PERSONAGENS = os.path.join(DADOS_DIR, "personagens.json")
 ARQUIVO_BESTIARIO = os.path.join(DADOS_DIR, "bestiario.json")
+ARQUIVO_HABILIDADES = os.path.join(DADOS_DIR, "habilidades.json")
 PASTA_IMAGENS = os.path.join(DADOS_DIR, "imagens")
 
 
@@ -48,6 +49,7 @@ def _garantir_estrutura():
         (ARQUIVO_USUARIOS, {"usuarios": []}),
         (ARQUIVO_PERSONAGENS, {"personagens": []}),
         (ARQUIVO_BESTIARIO, {"monstros": []}),
+        (ARQUIVO_HABILIDADES, {"habilidades": []}),
     ):
         if not os.path.exists(caminho):
             with open(caminho, "w", encoding="utf-8") as f:
@@ -89,6 +91,14 @@ def carregar_bestiario():
 
 def gravar_bestiario(monstros):
     _gravar_json(ARQUIVO_BESTIARIO, "monstros", monstros)
+
+
+def carregar_habilidades():
+    return _ler_json(ARQUIVO_HABILIDADES, "habilidades")
+
+
+def gravar_habilidades(habilidades):
+    _gravar_json(ARQUIVO_HABILIDADES, "habilidades", habilidades)
 
 
 # =============================================================================
@@ -306,6 +316,34 @@ def substituir_bestiario():
         return jsonify({"erro": "body deve ser uma lista de monstros"}), 400
     gravar_bestiario(body)
     return "", 204
+
+
+# ----- habilidades (catalogo compartilhado, qualquer usuario autenticado) -----
+
+@app.route("/habilidades", methods=["GET"])
+@autenticado
+def listar_habilidades():
+    return jsonify(carregar_habilidades())
+
+
+@app.route("/habilidades", methods=["POST"])
+@autenticado
+def criar_habilidade():
+    body = request.get_json(silent=True) or {}
+    nome = str(body.get("nome", "")).strip()
+    if not nome:
+        return jsonify({"erro": "nome obrigatorio"}), 400
+    habilidade = {
+        "id": body.get("id") or uuid.uuid4().hex,
+        "nome": nome,
+        "descricao": str(body.get("descricao", "")).strip(),
+        "criado_por": g.usuario,
+        "criado_em": datetime.now().strftime("%d/%m/%y"),
+    }
+    lista = carregar_habilidades()
+    lista.append(habilidade)
+    gravar_habilidades(lista)
+    return jsonify(habilidade), 201
 
 
 # ----- imagens -----
