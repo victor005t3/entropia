@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENTROPIA — Guia de primeiro acesso</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --panel: #0a0a0a;
+      --panel-2: #111111;
+      --border: #2a2a2a;
+      --text: #e8e8e8;
+      --text-soft: #888888;
+      --text-weak: #555555;
+      --accent: #44008c;
+      --accent-hover: #500086;
+      --vida: #8b0000;
+      --energia: #1e5fbf;
+      --sanidade: #6b2aa8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 28px 96px;
+    }
+
+    header {
+      text-align: center;
+      padding: 24px 0 48px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+
+    h1 {
+      font-family: "Segoe UI Light", sans-serif;
+      font-weight: 300;
+      font-size: 42px;
+      letter-spacing: 4px;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+
+    header .sub {
+      color: var(--text-soft);
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    header .quote {
+      margin-top: 18px;
+      color: var(--accent);
+      font-style: italic;
+      font-size: 14px;
+    }
+
+    h2 {
+      font-family: "Segoe UI Light", sans-serif;
+      font-weight: 300;
+      font-size: 24px;
+      margin: 56px 0 16px;
+      color: var(--text);
+      padding-left: 14px;
+      border-left: 3px solid var(--accent);
+    }
+
+    h2 .num {
+      color: var(--accent);
+      margin-right: 10px;
+      font-weight: 400;
+    }
+
+    h3 {
+      font-family: "Segoe UI", sans-serif;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-soft);
+      margin: 28px 0 10px;
+    }
+
+    p { margin: 12px 0; color: var(--text); }
+
+    p.note {
+      color: var(--text-soft);
+      font-size: 13px;
+      font-style: italic;
+      border-left: 2px solid var(--border);
+      padding: 4px 12px;
+      margin: 10px 0;
+    }
+
+    code {
+      font-family: "Consolas", "Courier New", monospace;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 3px;
+      color: #d7b8ff;
+      font-size: 13px;
+    }
+
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 14px 18px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #d7b8ff;
+      position: relative;
+    }
+
+    pre .cmt { color: var(--text-weak); font-style: italic; }
+
+    ul, ol { padding-left: 24px; margin: 12px 0; }
+    li { margin: 6px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--accent);
+      font-weight: 400;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    .alert {
+      background: #1a0520;
+      border: 1px solid var(--accent);
+      padding: 14px 18px;
+      border-radius: 4px;
+      margin: 18px 0;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .alert strong { color: var(--accent); }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 48px 0;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 80px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-weak);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    a { color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent); }
+    a:hover { color: #8a5fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>ENTROPIA</h1>
+      <div class="sub">Guia de primeiro acesso ao servidor</div>
+      <div class="quote">"O Caos Sempre Reina."</div>
+    </header>
+
+    <p>
+      Este documento te guia pelos passos necessários pra entrar no servidor
+      ENTROPIA pela primeira vez, cadastrar os usuários da mesa e começar
+      a jogar. Tempo estimado: <strong>10 minutos</strong>.
+    </p>
+
+    <p>Você vai precisar de:</p>
+    <ul>
+      <li>Um <strong>cliente SSH</strong> (Terminal no macOS/Linux ou PowerShell no Windows 10+).</li>
+      <li>O <strong>IP e usuário</strong> do servidor (fornecidos separadamente).</li>
+      <li>A pasta do projeto <strong>ENTROPIA</strong> no seu computador pra rodar o cliente Tkinter.</li>
+    </ul>
+
+    <h2><span class="num">1.</span>Conectar no servidor via SSH</h2>
+
+    <p>Abra o terminal da sua máquina (PowerShell no Windows, Terminal no macOS/Linux) e conecte:</p>
+
+<pre>ssh enzorpg@212.85.19.190</pre>
+
+    <p>Na primeira conexão o SSH vai perguntar:</p>
+
+<pre>The authenticity of host '212.85.19.190' can't be established.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?</pre>
+
+    <p>Digite <code>yes</code> e aperte Enter. Depois vai pedir a senha do usuário <code>enzorpg</code>. Digite (ela não aparece na tela — isso é normal) e aperte Enter.</p>
+
+    <p>Se deu certo, você verá uma tela de boas-vindas do CloudPanel e o prompt:</p>
+
+<pre>enzorpg@PortainerDesign:~$</pre>
+
+    <p class="note">Esse <code>$</code> no final indica que você está dentro do servidor. Todos os comandos a seguir são digitados aqui, não no seu computador.</p>
+
+    <h2><span class="num">2.</span>Entrar na pasta do projeto</h2>
+
+<pre>cd ~/htdocs/rpg.enzobr.com</pre>
+
+    <p>O prompt agora fica:</p>
+
+<pre>enzorpg@PortainerDesign:~/htdocs/rpg.enzobr.com$</pre>
+
+    <h2><span class="num">3.</span>Confirmar que o servidor está rodando</h2>
+
+    <p>Antes de cadastrar usuários, vale testar se a API está no ar:</p>
+
+<pre>curl http://127.0.0.1:3013/saude</pre>
+
+    <p>Resposta esperada:</p>
+
+<pre>{"ok": true, "dados_dir": "/home/enzorpg/htdocs/rpg.enzobr.com/dados"}</pre>
+
+    <div class="alert">
+      <strong>Se a resposta acima não aparecer</strong>, rode <code>systemctl --user status entropia</code> pra ver o status do service. Se estiver parado, suba com <code>systemctl --user start entropia</code>.
+    </div>
+
+    <h2><span class="num">4.</span>Cadastrar os usuários da mesa</h2>
+
+    <p>O servidor tem seu próprio banco de usuários (senhas ficam hasheadas com bcrypt, seguras mesmo se o arquivo vazar). <strong>Rode o comando abaixo uma vez para cada jogador</strong> — incluindo o Mestre:</p>
+
+<pre>ENTROPIA_DADOS_DIR=$PWD/dados venv/bin/python servidor.py criar-usuario</pre>
+
+    <p>O script é interativo. Responda cada pergunta e aperte Enter:</p>
+
+<pre>=== Criar usuario ENTROPIA ===
+Usuario: <span class="cmt">[nome do personagem/jogador, ex: O MESTRE]</span>
+Senha: <span class="cmt">[digite a senha — nao aparece na tela, e normal]</span>
+Palavra-chave: <span class="cmt">[digite a palavra-chave — nao aparece]</span>
+Papel (mestre/jogador) [jogador]: <span class="cmt">mestre ou jogador</span>
+usuario 'O MESTRE' criado (mestre).</pre>
+
+    <p class="note">A senha e a palavra-chave não aparecerem quando digitadas é intencional (igual <code>sudo</code>). Apenas digite e aperte Enter.</p>
+
+    <h3>Exemplo — cadastrando a mesa inteira</h3>
+
+    <p>Rode o comando 5 vezes, respondendo com:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Usuário</th>
+          <th>Papel</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>O MESTRE</td><td>mestre</td></tr>
+        <tr><td>AMÍLIA</td><td>jogador</td></tr>
+        <tr><td>DANTE</td><td>jogador</td></tr>
+        <tr><td>WYATT</td><td>jogador</td></tr>
+        <tr><td>GUIZO</td><td>jogador</td></tr>
+      </tbody>
+    </table>
+
+    <p>Senhas e palavras-chave ficam a critério da mesa.</p>
+
+    <h3>Listar quem foi cadastrado</h3>
+
+<pre>venv/bin/python servidor.py listar-usuarios</pre>
+
+    <p>Saída esperada:</p>
+
+<pre>  O MESTRE              mestre
+  AMÍLIA                jogador
+  DANTE                 jogador
+  WYATT                 jogador
+  GUIZO                 jogador</pre>
+
+    <h3>Remover um usuário (se precisar refazer)</h3>
+
+<pre>venv/bin/python servidor.py remover-usuario</pre>
+
+    <h2><span class="num">5.</span>Sair do servidor</h2>
+
+    <p>Com os usuários cadastrados, o trabalho no SSH acabou. Pode sair:</p>
+
+<pre>exit</pre>
+
+    <p>Todo o resto acontece no computador de cada jogador, rodando o cliente Tkinter.</p>
+
+    <div class="divider"></div>
+
+    <h2><span class="num">6.</span>Configurar o cliente no computador do jogador</h2>
+
+    <p>Cada jogador precisa ter a pasta do projeto <strong>ENTROPIA</strong> na máquina dele. Dentro dela, editar o arquivo <code>app.json</code>:</p>
+
+<pre>{
+  "modo": "remoto",
+  "servidor_url": "https://rpg.enzobr.com",
+  "token": null,
+  "usuario": null
+}</pre>
+
+    <p class="note">Esse arquivo diz pro cliente falar com o servidor em vez de salvar tudo na máquina.</p>
+
+    <h2><span class="num">7.</span>Rodar o cliente</h2>
+
+    <h3>Pré-requisitos (uma vez só)</h3>
+
+    <ul>
+      <li>Python 3.10+ instalado (<a href="https://www.python.org/downloads/">python.org/downloads</a>) — na tela de instalação, marque "Add Python to PATH".</li>
+    </ul>
+
+    <h3>Primeira vez — criar o ambiente virtual</h3>
+
+    <p>No PowerShell, dentro da pasta do projeto:</p>
+
+<pre>py -3 -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt</pre>
+
+    <p class="note">Se o PowerShell reclamar de "execução de scripts desabilitada", rode uma vez: <code>Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned</code> e tente de novo.</p>
+
+    <h3>Abrir o jogo</h3>
+
+<pre>python entropia.py</pre>
+
+    <p>A tela de login aparece. Usa <strong>o mesmo usuário, senha e palavra-chave</strong> que foram cadastrados no passo 4.</p>
+
+    <h3>Das próximas vezes</h3>
+
+<pre>.\venv\Scripts\Activate.ps1
+python entropia.py</pre>
+
+    <div class="divider"></div>
+
+    <h2><span class="num">8.</span>Problemas comuns</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Sintoma</th>
+          <th>Causa provável</th>
+          <th>Solução</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Não conecta no SSH</td>
+          <td>Senha errada ou IP errado</td>
+          <td>Confirme IP e senha com quem te passou o acesso</td>
+        </tr>
+        <tr>
+          <td>curl /saude não responde</td>
+          <td>Service caído</td>
+          <td><code>systemctl --user start entropia</code></td>
+        </tr>
+        <tr>
+          <td>Login no cliente dá "usuário não encontrado"</td>
+          <td>Usuário não foi cadastrado (passo 4)</td>
+          <td>Volta ao SSH e rode o passo 4 pro usuário faltante</td>
+        </tr>
+        <tr>
+          <td>Cliente reclama de conexão</td>
+          <td>URL errada em <code>app.json</code></td>
+          <td>Confira: deve ser <code>https://rpg.enzobr.com</code></td>
+        </tr>
+        <tr>
+          <td>"Not Found" abrindo a URL no navegador</td>
+          <td>Comportamento normal</td>
+          <td>O servidor não serve HTML, só API. O cliente Tkinter é quem usa</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer>
+      ENTROPIA · Sistema de mesa · O Caos Sempre Reina
+    </footer>
+
+  </div>
+</body>
+</html>

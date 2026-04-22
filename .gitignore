@@ -1,0 +1,18 @@
+# PyInstaller
+build/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Dados locais (modo "local") — nao versionar fichas dos jogadores
+personagens.json
+bestiario.json
+imagens/
+imagens_cache/
+dados/
+
+# Config da maquina
+app.json
