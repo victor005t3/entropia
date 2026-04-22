@@ -1,4 +1,4 @@
-# ENTROPIA
+# ENTROPIA v1.0
 
 Sistema de mesa para um RPG próprio, inspirado visualmente em [crisordemparanormal.com](https://crisordemparanormal.com).
 
