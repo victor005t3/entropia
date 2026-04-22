@@ -51,12 +51,7 @@ USUARIOS = {
         "senha": "692012",
         "palavra_chave": "combatente",
         "papel": "Jogador",
-    },
-    "TESTE
-        "senha": "692012",
-        "palavra_chave": "combatente",
-        "papel": "Jogador",
-    },
+    }
 }
 
 # =============================================================================
