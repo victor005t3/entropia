@@ -48,8 +48,13 @@ USUARIOS = {
         "papel": "jogador",
     },
     "GUIZO": {
-        "senha": "soufodão123",
-        "palavra_chave": "guizofodinha",
+        "senha": "692012",
+        "palavra_chave": "combatente",
+        "papel": "Jogador",
+    },
+    "TESTE
+        "senha": "692012",
+        "palavra_chave": "combatente",
         "papel": "Jogador",
     },
 }
