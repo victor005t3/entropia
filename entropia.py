@@ -109,6 +109,16 @@ ATRIBUTOS_NOMES = [
 ]
 
 # =============================================================================
+# MAESTRIAS
+# -----------------------------------------------------------------------------
+# Dois grupos fechados; cada nivel vai de 0 a MAESTRIA_MAX.
+# =============================================================================
+
+MAESTRIAS_ELEMENTAIS = ("AGUA", "TERRA", "FOGO", "AR")
+MAESTRIAS_PRIMORDIAIS = ("ABISMO", "LUMEN", "ETER", "NUCLEO", "NOUS")
+MAESTRIA_MAX = 6
+
+# =============================================================================
 # ARMAMENTOS
 # -----------------------------------------------------------------------------
 # Categorias pre-definidas. Apenas Pistola e Rifle usam municao (atual/maxima).
@@ -1270,6 +1280,11 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         self.itens = []
         self.habilidades = []
         self.catalogo_habilidades = []
+        self.maestrias = {
+            "elementais": {nome: 0 for nome in MAESTRIAS_ELEMENTAIS},
+            "primordiais": {nome: 0 for nome in MAESTRIAS_PRIMORDIAIS},
+        }
+        self.labels_maestrias = {"elementais": {}, "primordiais": {}}
         self.aba_atual = "personagem"
         self.tab_labels = {}
         self.frames_aba = {}
@@ -1320,10 +1335,12 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         self.frames_aba["personagem"] = tk.Frame(corpo_abas, bg=COR_FUNDO)
         self.frames_aba["inventario"] = tk.Frame(corpo_abas, bg=COR_FUNDO)
         self.frames_aba["habilidades"] = tk.Frame(corpo_abas, bg=COR_FUNDO)
+        self.frames_aba["maestrias"] = tk.Frame(corpo_abas, bg=COR_FUNDO)
 
         self._montar_aba_personagem(self.frames_aba["personagem"])
         self._montar_aba_inventario(self.frames_aba["inventario"])
         self._montar_aba_habilidades(self.frames_aba["habilidades"])
+        self._montar_aba_maestrias(self.frames_aba["maestrias"])
 
         self._montar_rodape(container)
         self._trocar_aba("personagem")
@@ -1336,6 +1353,7 @@ class TelaCriacaoPersonagem(tk.Toplevel):
             ("personagem", "Personagem"),
             ("inventario", "Inventario"),
             ("habilidades", "Habilidades"),
+            ("maestrias", "Maestrias"),
         ):
             label = tk.Label(
                 barra, text=rotulo, font=FONTE_BOTAO,
@@ -2486,6 +2504,115 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         self.catalogo_habilidades.append(nova)
         self._selecionar_habilidade(nova)
 
+    # ----- aba maestrias -----
+
+    def _montar_aba_maestrias(self, parent):
+        moldura = tk.Frame(parent, bg=COR_FUNDO,
+                           highlightthickness=1, highlightbackground=COR_BORDA)
+        moldura.pack(fill="both", expand=True)
+
+        self.canvas_maestrias = tk.Canvas(
+            moldura, bg=COR_FUNDO, highlightthickness=0,
+        )
+        scrollbar = tk.Scrollbar(moldura, orient="vertical",
+                                 command=self.canvas_maestrias.yview)
+        self.canvas_maestrias.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="y")
+        self.canvas_maestrias.pack(side="left", fill="both", expand=True)
+
+        self.frame_maestrias = tk.Frame(self.canvas_maestrias, bg=COR_FUNDO)
+        janela = self.canvas_maestrias.create_window(
+            (0, 0), window=self.frame_maestrias, anchor="nw",
+        )
+
+        self.canvas_maestrias.bind(
+            "<Configure>",
+            lambda e: self.canvas_maestrias.itemconfigure(janela, width=e.width),
+        )
+        self.frame_maestrias.bind(
+            "<Configure>",
+            lambda e: self.canvas_maestrias.configure(
+                scrollregion=self.canvas_maestrias.bbox("all")
+            ),
+        )
+        self.canvas_maestrias.bind("<Enter>", lambda e: self._ligar_scroll_maestrias())
+        self.canvas_maestrias.bind("<Leave>", lambda e: self._desligar_scroll_maestrias())
+
+        self._montar_secao_maestria(
+            "ELEMENTAIS", "elementais", MAESTRIAS_ELEMENTAIS, pady_topo=(10, 6),
+        )
+        self._montar_secao_maestria(
+            "PRIMORDIAIS", "primordiais", MAESTRIAS_PRIMORDIAIS, pady_topo=(20, 6),
+        )
+
+    def _ligar_scroll_maestrias(self):
+        self.canvas_maestrias.bind_all("<MouseWheel>", self._scroll_maestrias)
+
+    def _desligar_scroll_maestrias(self):
+        self.canvas_maestrias.unbind_all("<MouseWheel>")
+
+    def _scroll_maestrias(self, event):
+        self.canvas_maestrias.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def _montar_secao_maestria(self, titulo, grupo, nomes, pady_topo=(10, 6)):
+        tk.Label(
+            self.frame_maestrias, text=titulo, font=("Segoe UI", 12, "bold"),
+            bg=COR_FUNDO, fg=COR_TEXTO, anchor="w",
+        ).pack(fill="x", padx=10, pady=pady_topo)
+
+        grade = tk.Frame(self.frame_maestrias, bg=COR_FUNDO)
+        grade.pack(fill="x", padx=10)
+
+        for c in range(len(nomes)):
+            grade.grid_columnconfigure(c, weight=1, uniform=f"mae_{grupo}")
+
+        for idx, nome in enumerate(nomes):
+            self._criar_celula_maestria(grade, grupo, nome).grid(
+                row=0, column=idx, padx=6, pady=4, sticky="nsew",
+            )
+
+    def _criar_celula_maestria(self, parent, grupo, nome):
+        celula = tk.Frame(parent, bg=COR_FUNDO_PAINEL,
+                          highlightthickness=1, highlightbackground=COR_BORDA)
+
+        tk.Label(
+            celula, text=nome, font=("Segoe UI", 11, "bold"),
+            bg=COR_FUNDO_PAINEL, fg=COR_TEXTO,
+        ).pack(pady=(14, 6))
+
+        controle = tk.Frame(celula, bg=COR_FUNDO_PAINEL)
+        controle.pack(pady=(0, 16))
+
+        menos = tk.Label(
+            controle, text="−", font=("Segoe UI", 14, "bold"),
+            bg=COR_FUNDO_CAMPO, fg=COR_TEXTO, width=2, cursor="hand2",
+        )
+        menos.pack(side="left", padx=(0, 10))
+        menos.bind("<Button-1>", lambda e, g=grupo, n=nome: self._ajustar_maestria(g, n, -1))
+
+        valor = tk.Label(
+            controle, text="0", font=("Segoe UI", 20),
+            bg=COR_FUNDO_PAINEL, fg=COR_TEXTO, width=3,
+        )
+        valor.pack(side="left")
+        self.labels_maestrias[grupo][nome] = valor
+
+        mais = tk.Label(
+            controle, text="+", font=("Segoe UI", 14, "bold"),
+            bg=COR_FUNDO_CAMPO, fg=COR_TEXTO, width=2, cursor="hand2",
+        )
+        mais.pack(side="left", padx=(10, 0))
+        mais.bind("<Button-1>", lambda e, g=grupo, n=nome: self._ajustar_maestria(g, n, 1))
+
+        return celula
+
+    def _ajustar_maestria(self, grupo, nome, delta):
+        novo = self.maestrias[grupo][nome] + delta
+        novo = max(0, min(MAESTRIA_MAX, novo))
+        self.maestrias[grupo][nome] = novo
+        self.labels_maestrias[grupo][nome].configure(text=str(novo))
+
     # ----- rodape -----
 
     def _montar_rodape(self, parent):
@@ -2537,6 +2664,10 @@ class TelaCriacaoPersonagem(tk.Toplevel):
         armamentos = [dict(a) for a in self.armamentos]
         itens = [dict(i) for i in self.itens]
         habilidades = [dict(h) for h in self.habilidades]
+        maestrias = {
+            "elementais": dict(self.maestrias["elementais"]),
+            "primordiais": dict(self.maestrias["primordiais"]),
+        }
 
         if self.modo_edicao:
             personagem = dict(self.existente)
@@ -2556,6 +2687,7 @@ class TelaCriacaoPersonagem(tk.Toplevel):
                 "armamentos": armamentos,
                 "itens": itens,
                 "habilidades": habilidades,
+                "maestrias": maestrias,
                 "imagem": imagem_path,
             })
             try:
@@ -2588,6 +2720,7 @@ class TelaCriacaoPersonagem(tk.Toplevel):
             "armamentos": armamentos,
             "itens": itens,
             "habilidades": habilidades,
+            "maestrias": maestrias,
             "imagem": imagem_path,
         }
 
@@ -2670,6 +2803,19 @@ class TelaCriacaoPersonagem(tk.Toplevel):
                 "descricao": hab.get("descricao", ""),
             })
         self._renderizar_habilidades()
+
+        maestrias_salvas = p.get("maestrias") or {}
+        for grupo, nomes in (
+            ("elementais", MAESTRIAS_ELEMENTAIS),
+            ("primordiais", MAESTRIAS_PRIMORDIAIS),
+        ):
+            grupo_salvo = maestrias_salvas.get(grupo) or {}
+            for nome in nomes:
+                valor = int(grupo_salvo.get(nome, 0) or 0)
+                valor = max(0, min(MAESTRIA_MAX, valor))
+                self.maestrias[grupo][nome] = valor
+                if nome in self.labels_maestrias[grupo]:
+                    self.labels_maestrias[grupo][nome].configure(text=str(valor))
 
         imagem_path = p.get("imagem", "")
         self.imagem_path_salvo = imagem_path
